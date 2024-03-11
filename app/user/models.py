@@ -34,8 +34,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     username = models.CharField(max_length=255)
     is_business = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)  # email 인증 후에 True로 변경
-    verification_code = models.CharField(max_length=10, blank=True, null=True)
-    # is_staff = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
 
     objects = UserManager()
 
@@ -50,9 +49,9 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     def __str__(self):
         return self.username
 
-    @property
-    def is_staff(self):
-        return self.is_superuser
+    # @property
+    # def is_staff(self):
+    #     return self.is_superuser
 
 
 class UserProfile(TimeStampedModel):
