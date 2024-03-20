@@ -21,45 +21,48 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if serializer.is_valid(raise_exception=True):
+            user = serializer.save()
+            email = user.email
 
-        email = serializer.validated_data["email"]
+            if User.objects.filter(email=email).exists() and User.objects.filter(
+                is_active=True
+            ):
+                return Response(
+                    {"error": "이미 사용중인 이메일입니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        if User.objects.filter(email=email).exists():
+            # token = default_token_generator.make_token(email)
+            # uid = urlsafe_base64_encode(force_bytes(email))
+
+            # verification_url = (
+            #     f"http://127.0.0.1:8000/users/verify-email/{uid}/{token}/"
+            # )
+            # subject = "[이메일 인증] customshop 이메일 인증 코드입니다."
+            # message = f"Your verification code is: {verification_url}"
+            # from_email = settings.EMAIL_HOST_USER
+            # recipient_list = [email]
+
+            # send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+
+            # JWT 토큰 발급
+            refresh = RefreshToken.for_user(user)
+            tokens = {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            }
+
+            headers = self.get_success_headers(serializer.data)
             return Response(
-                {"error": "이미 사용중인 이메일입니다."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {
+                    "message": "아이디 생성을 완료하시려면 이메일 인증번호를 입력해주시기 바랍니다.\n감사합니다.",
+                    "tokens": tokens,
+                },
+                status=status.HTTP_201_CREATED,
+                headers=headers,
             )
-
-        user = User.objects.get(email=email)
-
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.id))
-
-        verification_url = f"http://127.0.0.1:8000/users/verify-email/{uid}/{token}/"
-        subject = "[이메일 인증] customshop 이메일 인증 코드입니다."
-        message = f"Your verification code is: {verification_url}"
-        from_email = settings.EMAIL_HOST_USER
-        recipient_list = [email]
-
-        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
-
-        # JWT 토큰 발급
-        refresh = RefreshToken.for_user(user)
-        tokens = {
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-        }
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            {
-                "message": "아이디 생성을 완료하시려면 이메일 인증번호를 입력해주시기 바랍니다.\n감사합니다.",
-                "tokens": tokens,
-            },
-            status=status.HTTP_201_CREATED,
-            headers=headers,
-        )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
         detail=False,

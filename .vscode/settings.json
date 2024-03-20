@@ -1,0 +1,12 @@
+{
+  "editor.tabSize": 4,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "always"
+    },
+  },
+  "isort.args":["--profile", "black"],
+  "flake8.args": ["--max-line-length", "120"]
+}

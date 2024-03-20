@@ -162,7 +162,8 @@ cython_debug/
 #.idea/
 
 # User custom
-.vscode/
+# .vscode/
 tests/
 pdm.lock
 recommendation.txt
+migrations/

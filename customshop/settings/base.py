@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Apps
-    "app.user",
+    "app.products.apps.ProductsConfig",
+    "app.users.apps.UsersConfig",
     # Library
     "rest_framework",
     "rest_framework_simplejwt",
@@ -116,9 +117,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ko-kr"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Seoul"
 
 USE_I18N = True
 
@@ -140,7 +141,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
 # App
-AUTH_USER_MODEL = "app.user.User"
+AUTH_USER_MODEL = "users.User"
 
 # DRF
 REST_FRAMEWORK = {
@@ -189,7 +190,8 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")  # app password
-SERVER_EMAIL = "kidsage92"
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # 링크만 누르면 바로 확인
 
 # Extra
 CORS_ALLOW_ALL_ORIGINS = True
