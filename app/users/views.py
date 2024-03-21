@@ -22,12 +22,9 @@ class UserViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            user = serializer.save()
-            email = user.email
+            email = serializer.validated_data.get("email")
 
-            if User.objects.filter(email=email).exists() and User.objects.filter(
-                is_active=True
-            ):
+            if User.objects.filter(email=email).exists():
                 return Response(
                     {"error": "이미 사용중인 이메일입니다."},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -47,6 +44,9 @@ class UserViewSet(viewsets.ModelViewSet):
             # send_mail(subject, message, from_email, recipient_list, fail_silently=False)
 
             # JWT 토큰 발급
+
+            user = serializer.save()
+
             refresh = RefreshToken.for_user(user)
             tokens = {
                 "refresh": str(refresh),
@@ -99,12 +99,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class UserProfileViewSet(viewsets.ModelViewSet):
-    authentication_classes = [IsAuthenticated]
+    # authentication_classes = [IsAuthenticated]
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
 
 
 class UserAddressViewSet(viewsets.ModelViewSet):
-    authentication_classes = [IsAuthenticated]
+    # authentication_classes = [IsAuthenticated]
     queryset = UserAddress.objects.all()
     serializer_class = UserAddressSerializer
