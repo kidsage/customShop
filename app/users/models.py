@@ -20,7 +20,6 @@ class UserManager(BaseUserManager):
 
         user = self.model(
             email=self.normalize_email(email),
-            username=username,
             **extra_fields,
         )
         user.set_password(password)
@@ -38,25 +37,23 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     email = models.EmailField(max_length=255, unique=True)
-    username = models.CharField(max_length=255)
 
     is_business = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-
     is_active = models.BooleanField(default=False)  # email 인증 후에 True로 변경
 
     objects = UserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = [
-        "username",
-    ]
+    # REQUIRED_FIELDS = [
+    #     "username",
+    # ]
 
     class Meta:
         db_table = "user"
 
     def __str__(self):
-        return self.username
+        return self.email
 
     # @property
     # def is_staff(self):
@@ -77,7 +74,7 @@ class UserProfile(TimeStampedModel):
         db_table = "user_profile"
 
     def __str__(self) -> str:
-        return f"{self.user.username}'s Profile"
+        return f"{self.user.email}'s Profile"
 
 
 # @receiver(post_save, sender=User)
@@ -94,6 +91,7 @@ class UserProfile(TimeStampedModel):
 class UserAddress(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
     address_name = models.CharField(max_length=10)
+    username = models.CharField(max_length=255, default=None, null=True, blank=True)
     zip_code = models.CharField(max_length=10)
     address = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20)
@@ -102,4 +100,4 @@ class UserAddress(TimeStampedModel):
         db_table = "user_address"
 
     def __str__(self) -> str:
-        return f"{self.user.username}'s address"
+        return f"{self.user.email}'s address"

@@ -1,11 +1,15 @@
-from django.conf import settings
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+# from django.conf import settings
+from django.contrib.auth import authenticate, login, logout
+
+# from django.contrib.auth.tokens import default_token_generator
+# from django.core.mail import send_mail
+# from django.shortcuts import get_object_or_404
+# from django.utils.encoding import force_bytes, force_str
+# from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+
+# from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -30,70 +34,41 @@ class UserViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # token = default_token_generator.make_token(email)
-            # uid = urlsafe_base64_encode(force_bytes(email))
-
-            # verification_url = (
-            #     f"http://127.0.0.1:8000/users/verify-email/{uid}/{token}/"
-            # )
-            # subject = "[이메일 인증] customshop 이메일 인증 코드입니다."
-            # message = f"Your verification code is: {verification_url}"
-            # from_email = settings.EMAIL_HOST_USER
-            # recipient_list = [email]
-
-            # send_mail(subject, message, from_email, recipient_list, fail_silently=False)
-
-            # JWT 토큰 발급
-
-            user = serializer.save()
-
-            refresh = RefreshToken.for_user(user)
-            tokens = {
-                "refresh": str(refresh),
-                "access": str(refresh.access_token),
-            }
-
-            headers = self.get_success_headers(serializer.data)
             return Response(
                 {
                     "message": "아이디 생성을 완료하시려면 이메일 인증번호를 입력해주시기 바랍니다.\n감사합니다.",
-                    "tokens": tokens,
                 },
                 status=status.HTTP_201_CREATED,
-                headers=headers,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(
-        detail=False,
-        methods=["get"],
-        url_path="verify-email/(?P<uidb64>[^/]+)/(?P<token>[^/]+)/",
-    )
-    def verify_email(self, request, uidb64, token):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+    @action(detail=False, methods=["post"])
+    def login(self, request):
+        email = request.data.get("email")
+        password = request.data.get("password")
 
-        uid = force_str(urlsafe_base64_decode(uidb64))
-
-        try:
-            user = User.objects.get(id=uid)
-
-            if default_token_generator.check_token(user, token):
-                user.is_active = True
-                user.save()
-
-                return Response(
-                    {"message": "이메일 인증이 완료되었습니다."},
-                    status=status.HTTP_200_OK,
-                )
-            else:
-                return Response(
-                    {"message": "이메일 확인 링크가 잘못되었습니다."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        except User.DoesNotExist:
+        user = authenticate(request, email=email, password=password)
+        if user is not None:
+            login(request, user)
+            refresh = RefreshToken.for_user(user)
             return Response(
-                {"message": "사용자를 찾을 수 없습니다."},
+                {"refresh": str(refresh), "access": str(refresh.access_token)},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"message": "유효하지 않은 인증 정보"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+    @action(detail=False, methods=["post"])
+    def logout(self, request):
+        if request.user.is_authenticated:
+            logout(request)
+            return Response({"message": "로그아웃 성공"}, status=status.HTTP_200_OK)
+        else:
+            return Response(
+                {"message": "이미 로그아웃된 사용자"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
