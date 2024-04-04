@@ -1,4 +1,7 @@
 # from django.conf import settings
+# from rest_framework_simplejwt.tokens import RefreshToken
+import logging
+
 from django.contrib.auth import authenticate, login, logout
 
 # from django.contrib.auth.tokens import default_token_generator
@@ -15,8 +18,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, UserAddress, UserProfile
 from .serializers import UserAddressSerializer, UserProfileSerializer, UserSerializer
-
-# from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -46,18 +47,20 @@ class UserViewSet(viewsets.ModelViewSet):
     def login(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
-
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
             refresh = RefreshToken.for_user(user)
             return Response(
-                {"refresh": str(refresh), "access": str(refresh.access_token)},
+                {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                },
                 status=status.HTTP_200_OK,
             )
         else:
             return Response(
-                {"message": "유효하지 않은 인증 정보"},
+                # {"message": "유효하지 않은 인증 정보"},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
