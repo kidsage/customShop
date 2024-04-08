@@ -35,11 +35,16 @@ class UserViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+
             return Response(
-                {
-                    "message": "아이디 생성을 완료하시려면 이메일 인증번호를 입력해주시기 바랍니다.\n감사합니다.",
-                },
+                serializer.data,
+                # {
+                #     "message": "아이디 생성을 완료하시려면 이메일 인증번호를 입력해주시기 바랍니다.\n감사합니다.",
+                # },
                 status=status.HTTP_201_CREATED,
+                headers=headers,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
